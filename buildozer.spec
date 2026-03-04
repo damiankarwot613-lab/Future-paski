@@ -16,10 +16,10 @@ fullscreen = 0
 
 android.api = 33
 android.minapi = 21
-android.sdk = 33
 android.ndk = 25b
 android.ndk_api = 21
-android.build_tools_version = 33.0.2
+
+p4a.branch = 2023.09.16
 
 android.enable_androidx = True
 android.use_androidx = True
