@@ -19,8 +19,6 @@ android.minapi = 21
 android.ndk = 25b
 android.ndk_api = 21
 
-p4a.branch = 2023.08.19
-
 android.enable_androidx = True
 android.use_androidx = True
 android.gradle_dependencies = androidx.documentfile:documentfile:1.0.1
