@@ -40,6 +40,13 @@ jobs:
       - name: Clean previous build
         run: rm -rf .buildozer
 
+      - name: Install Android SDK components
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-33"
+          sdkmanager "build-tools;33.0.2"
+
       - name: Force Accept Android Licenses
         run: |
           mkdir -p ~/.android
