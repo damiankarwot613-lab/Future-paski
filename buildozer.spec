@@ -14,10 +14,12 @@ requirements = python3,kivy==2.3.0,openpyxl,xlrd
 orientation = portrait
 fullscreen = 0
 
-android.api = 34
-android.minapi = 26
-android.ndk_api = 26
-android.arch = arm64-v8a
+android.api = 33
+android.minapi = 21
+android.sdk = 33
+android.ndk = 25b
+android.ndk_api = 21
+android.build_tools_version = 33.0.2
 
 android.enable_androidx = True
 android.use_androidx = True
