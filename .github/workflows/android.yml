@@ -39,7 +39,13 @@ jobs:
           rm -rf .buildozer
           rm -rf bin
 
-      # 🔥 BEZ update SDK
+      # 🔥 RĘCZNA INSTALACJA STABILNYCH BUILD-TOOLS
+      - name: Install stable Android build-tools
+        run: |
+          buildozer android update
+          yes | $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager "build-tools;33.0.2"
+          yes | $HOME/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager --licenses
+
       - name: Build APK
         run: |
           buildozer android debug
