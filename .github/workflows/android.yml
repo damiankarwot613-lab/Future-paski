@@ -40,7 +40,8 @@ jobs:
 
       - name: Install Buildozer
         run: |
-          pip install buildozer cython
+              pip install buildozer
+              pip install "cython<3"
 
       - name: Accept Android licenses
         run: |
