@@ -50,7 +50,14 @@ jobs:
       - name: Build APK
         run: |
           buildozer android release
-
+      
+      - name: Show build outputs
+        run: |
+              echo "=== BIN ==="
+              ls -R bin || true
+              echo "=== DIST ==="
+              ls -R .buildozer/android/platform/build-*/dists || true
+              
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
