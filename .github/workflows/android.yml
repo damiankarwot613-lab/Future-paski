@@ -62,4 +62,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: "**/*.apk"
+          path: /home/runner/work/Future-paski/Future-paski/bin/*.apk
