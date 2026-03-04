@@ -24,5 +24,3 @@ p4a.branch = 2023.09.16
 android.enable_androidx = True
 android.use_androidx = True
 android.gradle_dependencies = androidx.documentfile:documentfile:1.0.1
-
-p4a.branch = develop
