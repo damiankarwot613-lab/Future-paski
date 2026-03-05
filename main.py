@@ -245,7 +245,7 @@ class PaskiApp(App):
 
 
 # ---------------- POPUP ----------------
-
+#
     def popup(self,title,text):
 
         p = Popup(
