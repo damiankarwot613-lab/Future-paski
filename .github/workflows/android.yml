@@ -1,54 +1,64 @@
-name: Build APK
+name: Build Android APK
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-
-    - name: Checkout
+    - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Install system dependencies
+    - name: Install system packages
       run: |
         sudo apt update
         sudo apt install -y \
-        python3-pip \
-        build-essential \
-        git \
-        zip \
-        unzip \
-        openjdk-17-jdk \
-        autoconf \
-        libtool \
-        pkg-config \
-        zlib1g-dev \
-        libncurses5-dev \
-        libncursesw5-dev \
-        cmake
+          python3-pip \
+          git \
+          zip \
+          unzip \
+          openjdk-17-jdk \
+          autoconf \
+          libtool \
+          pkg-config \
+          zlib1g-dev \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libtinfo5 \
+          cmake \
+          libffi-dev \
+          libssl-dev
 
-    - name: Install Python dependencies
+    - name: Install Python tools
       run: |
-        python3 -m pip install --upgrade pip
+        pip install --upgrade pip
         pip install buildozer cython
 
-    - name: Prepare Android config
+    - name: Install Android SDK
       run: |
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
+
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O sdk.zip
+        unzip sdk.zip
+        mv cmdline-tools latest
+
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
 
     - name: Accept Android licenses
       run: |
-        yes | sdkmanager --licenses || true
+        yes | sdkmanager --licenses
 
     - name: Build APK
       run: |
-        python3 -m buildozer android clean
-        python3 -m buildozer -v android debug
+        buildozer android clean
+        buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
