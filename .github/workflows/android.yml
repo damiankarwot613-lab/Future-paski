@@ -51,8 +51,10 @@ jobs:
         run: |
           buildozer android release
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: **/*.aab
+      - name: Upload APK and AAB
+      uses: actions/upload-artifact@v4
+      with:
+        name: paskifuture-build
+        path: |
+          **/*.apk
+          **/*.aab
