@@ -1,45 +1,58 @@
-name: Android CI
+name: Build APK
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
         with:
-          distribution: temurin
-          java-version: 17
+          python-version: "3.10"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept SDK licenses
+      - name: Install system dependencies
         run: |
-          yes | sdkmanager --licenses
+          sudo apt update
+          sudo apt install -y \
+            zip unzip \
+            openjdk-17-jdk \
+            autoconf automake libtool \
+            libltdl-dev \
+            build-essential \
+            gettext \
+            pkg-config \
+            zlib1g-dev \
+            libncurses5-dev \
+            libffi-dev \
+            libssl-dev
 
-      - name: Install SDK packages
+      - name: Upgrade pip
         run: |
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-34"
-          sdkmanager "build-tools;34.0.0"
+          python -m pip install --upgrade pip
 
-      - name: Give gradle permission
-        run: chmod +x gradlew
+      - name: Install Buildozer
+        run: |
+              pip install buildozer
+              pip install "cython<3"
+
+      - name: Accept Android licenses
+        run: |
+          yes | buildozer android update
 
       - name: Build APK
-        run: ./gradlew assembleDebug
+        run: |
+          buildozer android release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk
-          path: app/build/outputs/apk/debug/*.apk
+          name: app-release
+          path: **/*.aab
