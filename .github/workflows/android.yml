@@ -51,8 +51,7 @@ jobs:
 
     - name: Accept Android licenses
       run: |
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
+        yes | sdkmanager --licenses || true
 
     - name: Build APK
       run: |
