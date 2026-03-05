@@ -5,32 +5,42 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install system packages
         run: |
           sudo apt update
           sudo apt install -y \
           python3-pip \
+          build-essential \
           git \
           zip \
           unzip \
-          openjdk-17-jdk
+          openjdk-17-jdk \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          zlib1g-dev \
+          libncurses5-dev \
+          libncursesw5-dev \
+          cmake \
+          libffi-dev \
+          libssl-dev
 
       - name: Install Python deps
         run: |
-          pip install --upgrade pip
+          python3 -m pip install --upgrade pip
           pip install buildozer cython
 
       - name: Accept Android licenses
         run: |
           mkdir -p $HOME/.android
-          touch $HOME/.android/repositories.cfg
-          yes | sdkmanager --licenses || true
+          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $HOME/.android/repositories.cfg || true
 
       - name: Build APK
         run: |
