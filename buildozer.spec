@@ -9,7 +9,7 @@ source.include_exts = py,xls,xlsx
 
 version = 1.0
 
-requirements = python3,kivy,pandas,openpyxl,plyer,cython
+requirements = python3,kivy,pandas,openpyxl,plyer,cython,jnius
 
 orientation = portrait
 fullscreen = 0
