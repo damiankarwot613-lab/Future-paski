@@ -22,3 +22,4 @@ android.ndk_api = 21
 android.enable_androidx = True
 android.use_androidx = True
 android.gradle_dependencies = androidx.documentfile:documentfile:1.0.1
+android.release_artifact = apk
