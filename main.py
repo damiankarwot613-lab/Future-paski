@@ -38,16 +38,16 @@ class PaskiApp(App):
 
     def build(self):
 
-    self.full_data = []
-    self.filtered_data = []
-    self.current_file = None
-    self.export_tree_uri = None
+        self.full_data = []
+        self.filtered_data = []
+        self.current_file = None
+        self.export_tree_uri = None
 
-    self.config_path = Path(self.user_data_dir) / "config.json"
+        self.config_path = Path(self.user_data_dir) / "config.json"
 
-    self.sm = ScreenManager()
-    self.home = Home(name="home")
-    self.table = Table(name="table")
+        self.sm = ScreenManager()
+        self.home = Home(name="home")
+        self.table = Table(name="table")
 
     # OPÓŹNIONA INICJALIZACJA
     Clock.schedule_once(self.finish_init, 1)
@@ -56,15 +56,15 @@ class PaskiApp(App):
 
     def finish_init(self, dt):
 
-    self.load_config()
+        self.load_config()
 
-    self.build_home()
-    self.build_table()
+        self.build_home()
+        self.build_table()
 
-    self.sm.add_widget(self.home)
-    self.sm.add_widget(self.table)
+        self.sm.add_widget(self.home)
+        self.sm.add_widget(self.table)
 
-    self.sm.current = "home"
+        self.sm.current = "home"
 
     # ================= CONFIG =================
 
