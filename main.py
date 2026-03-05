@@ -1,163 +1,158 @@
 import os
-import csv
-from openpyxl import load_workbook, Workbook
+import pandas as pd
 
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.progressbar import ProgressBar
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.checkbox import CheckBox
 
 from plyer import filechooser
 
 
-class UltraLayout(BoxLayout):
+class MainLayout(BoxLayout):
 
     def __init__(self, **kwargs):
-        super().__init__(orientation="vertical", padding=15, spacing=10, **kwargs)
+        super().__init__(orientation="vertical", **kwargs)
 
-        self.file_path = None
-        self.folder = None
-        self.headers = []
-        self.rows = []
-        self.checkboxes = []
+        self.df = None
+        self.selected_columns = []
 
-        self.status = Label(text="ULTRA Exporter - wybierz plik")
-        self.add_widget(self.status)
+        self.info = Label(text="Excel Exporter ULTRA PRO")
+        self.add_widget(self.info)
 
-        btn_file = Button(text="Wczytaj plik XLS/XLSX/CSV", size_hint_y=None, height=80)
-        btn_file.bind(on_press=self.load_file)
-        self.add_widget(btn_file)
+        btn_load = Button(text="Load Excel")
+        btn_load.bind(on_press=self.load_excel)
+        self.add_widget(btn_load)
 
-        btn_folder = Button(text="Wybierz folder zapisu", size_hint_y=None, height=80)
-        btn_folder.bind(on_press=self.choose_folder)
-        self.add_widget(btn_folder)
+        self.columns_layout = GridLayout(cols=1, size_hint_y=None)
+        self.columns_layout.bind(minimum_height=self.columns_layout.setter("height"))
 
-        self.scroll = ScrollView(size_hint=(1, 1))
-        self.column_layout = GridLayout(cols=1, size_hint_y=None)
-        self.column_layout.bind(minimum_height=self.column_layout.setter('height'))
-        self.scroll.add_widget(self.column_layout)
+        scroll = ScrollView(size_hint=(1, .4))
+        scroll.add_widget(self.columns_layout)
 
-        self.add_widget(self.scroll)
+        self.add_widget(scroll)
 
-        btn_export = Button(text="EXPORT ULTRA", size_hint_y=None, height=90)
-        btn_export.bind(on_press=self.export_files)
+        btn_export = Button(text="Export")
+        btn_export.bind(on_press=self.export_rows)
         self.add_widget(btn_export)
 
-    def load_file(self, instance):
+        self.progress = ProgressBar(max=100)
+        self.add_widget(self.progress)
 
-        file = filechooser.open_file(filters=["*.xlsx","*.xls","*.csv"])
+    def load_excel(self, instance):
 
-        if not file:
+        filechooser.open_file(
+            on_selection=self.file_selected,
+            filters=["*.xls", "*.xlsx"]
+        )
+
+    def file_selected(self, selection):
+
+        if not selection:
             return
 
-        self.file_path = file[0]
+        path = selection[0]
 
-        ext = self.file_path.split(".")[-1].lower()
+        try:
 
-        if ext == "csv":
-            self.load_csv()
+            self.df = pd.read_excel(path)
+
+            self.info.text = f"Loaded {len(self.df)} rows"
+
+            self.build_column_selector()
+
+        except Exception as e:
+            self.info.text = str(e)
+
+    def build_column_selector(self):
+
+        self.columns_layout.clear_widgets()
+        self.selected_columns.clear()
+
+        for col in self.df.columns:
+
+            row = BoxLayout(size_hint_y=None, height=40)
+
+            cb = CheckBox()
+            cb.bind(active=self.on_checkbox)
+
+            label = Label(text=str(col))
+
+            row.add_widget(cb)
+            row.add_widget(label)
+
+            self.columns_layout.add_widget(row)
+
+    def on_checkbox(self, checkbox, value):
+
+        label = checkbox.parent.children[0].text
+
+        if value:
+            self.selected_columns.append(label)
         else:
-            self.load_excel()
+            if label in self.selected_columns:
+                self.selected_columns.remove(label)
 
-        self.show_columns()
+    def export_rows(self, instance):
 
-    def load_excel(self):
-
-        wb = load_workbook(self.file_path)
-        ws = wb.active
-
-        data = list(ws.values)
-
-        self.headers = list(data[0])
-        self.rows = list(data[1:])
-
-        self.status.text = f"Wczytano {len(self.rows)} rekordów"
-
-    def load_csv(self):
-
-        with open(self.file_path, newline="", encoding="utf-8") as f:
-
-            reader = list(csv.reader(f))
-
-            self.headers = reader[0]
-            self.rows = reader[1:]
-
-        self.status.text = f"Wczytano {len(self.rows)} rekordów"
-
-    def show_columns(self):
-
-        self.column_layout.clear_widgets()
-        self.checkboxes = []
-
-        for col in self.headers:
-
-            btn = ToggleButton(text=col, size_hint_y=None, height=80)
-
-            btn.state = "down"
-
-            self.column_layout.add_widget(btn)
-            self.checkboxes.append(btn)
-
-    def choose_folder(self, instance):
-
-        folder = filechooser.choose_dir()
-
-        if folder:
-            self.folder = folder[0]
-            self.status.text = f"Folder: {self.folder}"
-
-    def export_files(self, instance):
-
-        if not self.folder:
-            self.status.text = "Najpierw wybierz folder"
+        if self.df is None:
+            self.info.text = "Load file first"
             return
 
-        selected_indexes = []
+        if not self.selected_columns:
+            self.selected_columns = list(self.df.columns)
 
-        for i,btn in enumerate(self.checkboxes):
+        Clock.schedule_once(lambda dt: self.run_export())
 
-            if btn.state == "down":
-                selected_indexes.append(i)
+    def run_export(self):
 
-        if not selected_indexes:
-            self.status.text = "Wybierz kolumny"
-            return
+        output_dir = os.path.expanduser("~/Documents")
 
-        headers = [self.headers[i] for i in selected_indexes]
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
-        count = 0
+        total = len(self.df)
 
-        for row in self.rows:
+        for i, row in self.df.iterrows():
 
-            imie = str(row[0])
-            nazwisko = str(row[1])
+            data = row[self.selected_columns]
 
-            filename = f"{imie}_{nazwisko}.xlsx"
+            df_row = pd.DataFrame([data])
 
-            path = os.path.join(self.folder, filename)
+            try:
 
-            wb = Workbook()
-            ws = wb.active
+                name = str(row.get("Imię", "row"))
+                surname = str(row.get("Nazwisko", i))
 
-            ws.append(headers)
+                filename = f"{name}_{surname}.xlsx"
 
-            data = [row[i] for i in selected_indexes]
+            except:
+                filename = f"row_{i}.xlsx"
 
-            ws.append(data)
+            path = os.path.join(output_dir, filename)
 
-            wb.save(path)
+            df_row.to_excel(path, index=False)
 
-            count += 1
+            progress = int((i + 1) / total * 100)
+            self.progress.value = progress
 
-        self.status.text = f"Wyeksportowano {count} plików"
+        self.info.text = f"Exported {total} files"
 
 
-class UltraApp(App):
+class ExcelApp(App):
+
     def build(self):
-        return UltraLayout()
+
+        layout = MainLayout()
+
+        Clock.schedule_once(lambda dt: print("App started"), 1)
+
+        return layout
 
 
-UltraApp().run()
+ExcelApp().run()
