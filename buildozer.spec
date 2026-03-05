@@ -1,30 +1,30 @@
 [app]
 
-title = ExcelExporterUltra
+title = ExcelExporter
 package.name = excelexporter
-package.domain = org.private
+package.domain = org.test
 
 source.dir = .
-source.include_exts = py,xls,xlsx
+source.include_exts = py
 
 version = 1.0
 
-requirements = python3,kivy,pandas,openpyxl,plyer,cython,jnius
+requirements = python3,kivy==2.2.1,pandas==1.5.3,openpyxl==3.1.2,plyer,cython==0.29.36
 
 orientation = portrait
+
 fullscreen = 0
 
 android.api = 33
 android.minapi = 24
 android.ndk = 25b
 
-android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
+android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
 
-android.accept_sdk_license = True
+android.archs = arm64-v8a,armeabi-v7a
 
-log_level = 2
-
-[buildozer]
+p4a.bootstrap = sdl2
 
 log_level = 2
+
 warn_on_root = 1
