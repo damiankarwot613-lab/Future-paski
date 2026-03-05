@@ -1,121 +1,163 @@
-import pandas as pd
-from pathlib import Path
+import os
+import csv
+from openpyxl import load_workbook, Workbook
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
+from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
 
+from plyer import filechooser
 
-class MainLayout(BoxLayout):
+
+class UltraLayout(BoxLayout):
 
     def __init__(self, **kwargs):
-        super().__init__(orientation="vertical", **kwargs)
+        super().__init__(orientation="vertical", padding=15, spacing=10, **kwargs)
 
-        self.data = None
-        self.filtered = None
+        self.file_path = None
+        self.folder = None
+        self.headers = []
+        self.rows = []
+        self.checkboxes = []
 
-        self.header = Label(
-            text="Paski Future",
-            size_hint=(1, 0.1),
-            font_size=26
-        )
-        self.add_widget(self.header)
+        self.status = Label(text="ULTRA Exporter - wybierz plik")
+        self.add_widget(self.status)
 
-        self.load_button = Button(
-            text="Wczytaj Excel",
-            size_hint=(1, 0.1)
-        )
-        self.load_button.bind(on_press=self.load_excel)
-        self.add_widget(self.load_button)
+        btn_file = Button(text="Wczytaj plik XLS/XLSX/CSV", size_hint_y=None, height=80)
+        btn_file.bind(on_press=self.load_file)
+        self.add_widget(btn_file)
 
-        self.search = TextInput(
-            hint_text="Szukaj...",
-            size_hint=(1, 0.1),
-            multiline=False
-        )
-        self.search.bind(text=self.filter_data)
-        self.add_widget(self.search)
+        btn_folder = Button(text="Wybierz folder zapisu", size_hint_y=None, height=80)
+        btn_folder.bind(on_press=self.choose_folder)
+        self.add_widget(btn_folder)
 
-        self.preview = Label(
-            text="Brak danych",
-            size_hint=(1, 0.1)
-        )
-        self.add_widget(self.preview)
+        self.scroll = ScrollView(size_hint=(1, 1))
+        self.column_layout = GridLayout(cols=1, size_hint_y=None)
+        self.column_layout.bind(minimum_height=self.column_layout.setter('height'))
+        self.scroll.add_widget(self.column_layout)
 
-        self.scroll = ScrollView(size_hint=(1, 0.6))
-
-        self.grid = GridLayout(
-            cols=1,
-            size_hint_y=None
-        )
-        self.grid.bind(minimum_height=self.grid.setter("height"))
-
-        self.scroll.add_widget(self.grid)
         self.add_widget(self.scroll)
 
-    def load_excel(self, instance):
+        btn_export = Button(text="EXPORT ULTRA", size_hint_y=None, height=90)
+        btn_export.bind(on_press=self.export_files)
+        self.add_widget(btn_export)
 
-        try:
+    def load_file(self, instance):
 
-            path = Path("data/test.xlsx")
+        file = filechooser.open_file(filters=["*.xlsx","*.xls","*.csv"])
 
-            if not path.exists():
-                self.preview.text = "Brak pliku data/test.xlsx"
-                return
-
-            self.data = pd.read_excel(path)
-            self.filtered = self.data.copy()
-
-            self.preview.text = f"Wczytano {len(self.data)} rekordów"
-
-            self.show_data()
-
-        except Exception as e:
-            self.preview.text = str(e)
-
-    def filter_data(self, instance, text):
-
-        if self.data is None:
+        if not file:
             return
 
-        if text == "":
-            self.filtered = self.data.copy()
+        self.file_path = file[0]
+
+        ext = self.file_path.split(".")[-1].lower()
+
+        if ext == "csv":
+            self.load_csv()
         else:
-            mask = self.data.astype(str).apply(
-                lambda row: row.str.contains(text, case=False).any(),
-                axis=1
-            )
-            self.filtered = self.data[mask]
+            self.load_excel()
 
-        self.show_data()
+        self.show_columns()
 
-    def show_data(self):
+    def load_excel(self):
 
-        self.grid.clear_widgets()
+        wb = load_workbook(self.file_path)
+        ws = wb.active
 
-        if self.filtered is None:
+        data = list(ws.values)
+
+        self.headers = list(data[0])
+        self.rows = list(data[1:])
+
+        self.status.text = f"Wczytano {len(self.rows)} rekordów"
+
+    def load_csv(self):
+
+        with open(self.file_path, newline="", encoding="utf-8") as f:
+
+            reader = list(csv.reader(f))
+
+            self.headers = reader[0]
+            self.rows = reader[1:]
+
+        self.status.text = f"Wczytano {len(self.rows)} rekordów"
+
+    def show_columns(self):
+
+        self.column_layout.clear_widgets()
+        self.checkboxes = []
+
+        for col in self.headers:
+
+            btn = ToggleButton(text=col, size_hint_y=None, height=80)
+
+            btn.state = "down"
+
+            self.column_layout.add_widget(btn)
+            self.checkboxes.append(btn)
+
+    def choose_folder(self, instance):
+
+        folder = filechooser.choose_dir()
+
+        if folder:
+            self.folder = folder[0]
+            self.status.text = f"Folder: {self.folder}"
+
+    def export_files(self, instance):
+
+        if not self.folder:
+            self.status.text = "Najpierw wybierz folder"
             return
 
-        for _, row in self.filtered.head(100).iterrows():
+        selected_indexes = []
 
-            label = Label(
-                text=str(row.to_dict()),
-                size_hint_y=None,
-                height=40
-            )
+        for i,btn in enumerate(self.checkboxes):
 
-            self.grid.add_widget(label)
+            if btn.state == "down":
+                selected_indexes.append(i)
+
+        if not selected_indexes:
+            self.status.text = "Wybierz kolumny"
+            return
+
+        headers = [self.headers[i] for i in selected_indexes]
+
+        count = 0
+
+        for row in self.rows:
+
+            imie = str(row[0])
+            nazwisko = str(row[1])
+
+            filename = f"{imie}_{nazwisko}.xlsx"
+
+            path = os.path.join(self.folder, filename)
+
+            wb = Workbook()
+            ws = wb.active
+
+            ws.append(headers)
+
+            data = [row[i] for i in selected_indexes]
+
+            ws.append(data)
+
+            wb.save(path)
+
+            count += 1
+
+        self.status.text = f"Wyeksportowano {count} plików"
 
 
-class FutureApp(App):
-
+class UltraApp(App):
     def build(self):
-        return MainLayout()
+        return UltraLayout()
 
 
-if __name__ == "__main__":
-    FutureApp().run()
+UltraApp().run()
