@@ -8,50 +8,47 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
 
-      - name: Install system packages
-        run: |
-          sudo apt update
-          sudo apt install -y \
-          python3-pip \
-          build-essential \
-          git \
-          zip \
-          unzip \
-          openjdk-17-jdk \
-          autoconf \
-          automake \
-          libtool \
-          pkg-config \
-          zlib1g-dev \
-          libncurses5-dev \
-          libncursesw5-dev \
-          cmake \
-          libffi-dev \
-          libssl-dev
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Install Python tools
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install buildozer cython
+    - name: Install system packages
+      run: |
+        sudo apt update
+        sudo apt install -y \
+        python3-pip \
+        build-essential \
+        git \
+        zip \
+        unzip \
+        openjdk-17-jdk \
+        autoconf \
+        automake \
+        libtool \
+        pkg-config \
+        zlib1g-dev \
+        libncurses5-dev \
+        libncursesw5-dev \
+        cmake \
+        libffi-dev \
+        libssl-dev
 
-      - name: Accept Android licenses
-        run: |
-          mkdir -p $HOME/.android
-          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $HOME/.android/repositories.cfg || true
+    - name: Install Python tools
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install buildozer cython
 
-      - name: Clean build
-        run: |
-          buildozer android clean
+    - name: Accept Android licenses
+      run: |
+        mkdir -p $HOME/.android
+        touch $HOME/.android/repositories.cfg
 
-      - name: Build APK
-        run: |
-          buildozer android debug
+    - name: Build APK
+      run: |
+        buildozer -v android debug
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk
-          path: bin/*.apk
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: apk
+        path: bin/*.apk
