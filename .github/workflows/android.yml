@@ -48,6 +48,10 @@ jobs:
       run: |
         rm -rf .buildozer
         rm -rf bin
+        - name: Prepare Android
+          run: |
+             mkdir -p ~/.android
+             touch ~/.android/repositories.cfg
 
     - name: Accept Android licenses
       run: |
