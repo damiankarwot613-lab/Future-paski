@@ -1,88 +1,53 @@
 [app]
 
-# (str) Title of your application
-title = Ultra Exporter
-
-# (str) Package name
-package.name = ultraexport
-
-# (str) Package domain
+title = Excel Exporter ULTRA
+package.name = excelexporter
 package.domain = org.private
 
-# (str) Source code where the main.py live
 source.dir = .
+source.include_exts = py,png,jpg,kv,xls,xlsx
 
-# (list) Source files to include
-source.include_exts = py,kv,png,jpg
-
-# (str) Application version
 version = 1.0
 
-# (list) Application requirements
-requirements = python3,kivy,plyer,openpyxl
-
-# (str) Supported orientation
 orientation = portrait
 
-# (bool) Fullscreen
 fullscreen = 0
 
-# (int) Log level (0 = error, 1 = warning, 2 = info, 3 = debug)
+requirements = python3,kivy,cython,pyjnius,pandas,openpyxl
+
 log_level = 2
 
+android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,MANAGE_EXTERNAL_STORAGE
 
-# Android specific
-# ------------------------------------------------
-
-# Target Android API
 android.api = 33
-
-# Minimum API your APK will support
 android.minapi = 21
-
-# Android NDK version
-android.ndk = 25b
-
-# Android NDK API
+android.ndk = 25c
 android.ndk_api = 21
 
-# Architectures to build for
-android.archs = arm64-v8a, armeabi-v7a
-
-# Android permissions
-android.permissions = READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
-
-# Automatically accept SDK licenses
 android.accept_sdk_license = True
 
-# Store app data privately
-android.private_storage = True
+android.enable_androidx = True
 
-# Orientation
-android.orientation = portrait
+android.gradle_dependencies = androidx.documentfile:documentfile:1.0.1
 
-# Copy python libs
-android.copy_libs = 1
+p4a.branch = develop
 
+android.archs = arm64-v8a, armeabi-v7a
 
-# Python for Android
-# ------------------------------------------------
+android.allow_backup = True
 
-p4a.bootstrap = sdl2
+android.private_storage = False
 
+android.release_artifact = apk
 
-# Debug
-# ------------------------------------------------
+android.debug_artifact = apk
 
-android.logcat_filters = *:S python:D
+android.manifest.intent_filters =
 
+android.add_assets = assets
 
-# Build directory
-build_dir = .buildozer
+[buildozer]
 
+log_level = 2
 
-# Gradle dependencies
-android.gradle_dependencies =
-
-
-# End of configuration
+warn_on_root = 1
