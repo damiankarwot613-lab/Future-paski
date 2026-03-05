@@ -1,29 +1,18 @@
 import json
-import threading
 from pathlib import Path
 
 from kivy.app import App
-from kivy.clock import Clock
 from kivy.metrics import dp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
-from kivy.uix.progressbar import ProgressBar
-from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.screenmanager import ScreenManager, Screen
+
 
 APP_TITLE = "Paski Future Stable"
-PREVIEW_ROWS = 5
-
-
-class Home(Screen):
-    pass
-
-
-class Table(Screen):
-    pass
 
 
 class PaskiApp(App):
@@ -31,55 +20,24 @@ class PaskiApp(App):
     def build(self):
 
         self.full_data = []
-        self.filtered_data = []
-        self.current_file = None
-        self.export_tree_uri = None
-
-        self.config_path = Path(self.user_data_dir) / "config.json"
 
         self.sm = ScreenManager()
 
-        self.home = Home(name="home")
-        self.table = Table(name="table")
+        self.home_screen = Screen(name="home")
+        self.table_screen = Screen(name="table")
 
-        self.sm.add_widget(self.home)
-        self.sm.add_widget(self.table)
-
-        # opóźnienie startu (ważne dla Androida)
-        Clock.schedule_once(self.finish_init, 1)
-
-        return self.sm
-
-    def finish_init(self, dt):
-
-        self.load_config()
         self.build_home()
         self.build_table()
 
+        self.sm.add_widget(self.home_screen)
+        self.sm.add_widget(self.table_screen)
+
         self.sm.current = "home"
 
-    # ---------------- CONFIG ----------------
+        return self.sm
 
-    def load_config(self):
 
-        if self.config_path.exists():
-
-            try:
-                with open(self.config_path, "r") as f:
-                    data = json.load(f)
-                    self.export_tree_uri = data.get("export_tree_uri")
-            except:
-                pass
-
-    def save_config(self):
-
-        try:
-            with open(self.config_path, "w") as f:
-                json.dump({"export_tree_uri": self.export_tree_uri}, f)
-        except:
-            pass
-
-    # ---------------- HOME ----------------
+# ---------------- HOME ----------------
 
     def build_home(self):
 
@@ -92,72 +50,63 @@ class PaskiApp(App):
         title = Label(
             text=APP_TITLE,
             size_hint_y=None,
-            height=dp(40)
-        )
-
-        btn_preview = Button(
-            text="Test danych"
-        )
-
-        btn_preview.bind(on_press=self.fake_load)
-
-        self.preview_label = Label(
-            text="Brak danych",
-            halign="left",
-            valign="top"
-        )
-
-        layout.add_widget(title)
-        layout.add_widget(btn_preview)
-        layout.add_widget(self.preview_label)
-
-        self.home.add_widget(layout)
-
-    # ---------------- TABLE ----------------
-
-    def build_table(self):
-
-        layout = BoxLayout(orientation="vertical")
-
-        btn_back = Button(
-            text="Powrót",
-            size_hint_y=None,
             height=dp(50)
         )
 
-        btn_back.bind(on_press=lambda x: self.go_home())
+        btn = Button(
+            text="Test danych",
+            size_hint_y=None,
+            height=dp(60)
+        )
 
-        self.table_grid = GridLayout(
+        btn.bind(on_press=self.load_test_data)
+
+        self.info = Label(
+            text="Aplikacja uruchomiona",
+            halign="center"
+        )
+
+        layout.add_widget(title)
+        layout.add_widget(btn)
+        layout.add_widget(self.info)
+
+        self.home_screen.add_widget(layout)
+
+
+# ---------------- TABLE ----------------
+
+    def build_table(self):
+
+        root = BoxLayout(orientation="vertical")
+
+        back = Button(
+            text="Powrót",
+            size_hint_y=None,
+            height=dp(60)
+        )
+
+        back.bind(on_press=self.go_home)
+
+        self.grid = GridLayout(
             cols=5,
             spacing=dp(5),
             size_hint_y=None
         )
 
-        self.table_grid.bind(
-            minimum_height=self.table_grid.setter('height')
-        )
+        self.grid.bind(minimum_height=self.grid.setter("height"))
 
         scroll = ScrollView()
-        scroll.add_widget(self.table_grid)
+        scroll.add_widget(self.grid)
 
-        layout.add_widget(btn_back)
-        layout.add_widget(scroll)
+        root.add_widget(back)
+        root.add_widget(scroll)
 
-        self.table.add_widget(layout)
+        self.table_screen.add_widget(root)
 
-    # ---------------- NAVIGATION ----------------
 
-    def go_home(self):
+# ---------------- DATA ----------------
 
-        self.sm.current = "home"
-
-    def go_table(self):
-
-        self.sm.current = "table"
-
-    # ---------------- TEST DATA ----------------
-
-    def fake_load(self, instance):
+    def load_test_data(self, instance):
 
         self.full_data = []
 
@@ -173,23 +122,24 @@ class PaskiApp(App):
 
             self.full_data.append(row)
 
-        self.preview_label.text = f"Wczytano {len(self.full_data)} rekordów"
+        self.info.text = f"Wczytano {len(self.full_data)} rekordów"
 
         self.display_table()
 
-        self.go_table()
+        self.sm.current = "table"
 
-    # ---------------- TABLE DISPLAY ----------------
+
+# ---------------- TABLE VIEW ----------------
 
     def display_table(self):
 
-        self.table_grid.clear_widgets()
+        self.grid.clear_widgets()
 
         headers = ["ID", "Produkt", "Stan", "Sprzedaż", "Cena"]
 
         for h in headers:
 
-            self.table_grid.add_widget(Label(
+            self.grid.add_widget(Label(
                 text=h,
                 size_hint_y=None,
                 height=dp(40)
@@ -199,34 +149,18 @@ class PaskiApp(App):
 
             for cell in row:
 
-                self.table_grid.add_widget(Label(
+                self.grid.add_widget(Label(
                     text=str(cell),
                     size_hint_y=None,
                     height=dp(35)
                 ))
 
-    # ---------------- POPUP ----------------
 
-    def popup(self, title, text):
+# ---------------- NAV ----------------
 
-        box = BoxLayout(orientation="vertical")
+    def go_home(self, instance):
 
-        label = Label(text=text)
-
-        btn = Button(text="OK", size_hint_y=None, height=dp(40))
-
-        box.add_widget(label)
-        box.add_widget(btn)
-
-        popup = Popup(
-            title=title,
-            content=box,
-            size_hint=(0.8, 0.4)
-        )
-
-        btn.bind(on_press=popup.dismiss)
-
-        popup.open()
+        self.sm.current = "home"
 
 
 if __name__ == "__main__":
