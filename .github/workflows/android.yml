@@ -26,7 +26,8 @@ jobs:
           autoconf \
           libtool \
           pkg-config
-
+          gettext
+          
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
