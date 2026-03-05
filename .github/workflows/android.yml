@@ -24,7 +24,7 @@ jobs:
           autoconf \
           libtool \
           pkg-config \
-          zlib1g-dev
+          zlib1g-de
 
       - name: Install Python dependencies
         run: |
