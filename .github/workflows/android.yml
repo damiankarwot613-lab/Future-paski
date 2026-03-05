@@ -1,42 +1,43 @@
-name: Android APK Build
+name: Build APK
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Install system packages
+        run: |
+          sudo apt update
+          sudo apt install -y \
+          python3-pip \
+          git \
+          zip \
+          unzip \
+          openjdk-17-jdk
 
-    - name: Install system dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y \
-        zip unzip \
-        openjdk-17-jdk \
-        python3-pip \
-        autoconf automake libtool \
-        pkg-config gettext \
-        zlib1g-dev libncurses5-dev \
-        libffi-dev libssl-dev \
-        cmake
+      - name: Install Python deps
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython
 
-    - name: Install buildozer
-      run: |
-        pip install --upgrade pip
-        pip install buildozer cython
+      - name: Accept Android licenses
+        run: |
+          mkdir -p $HOME/.android
+          touch $HOME/.android/repositories.cfg
+          yes | sdkmanager --licenses || true
 
-    - name: Build APK
-      run: |
-        buildozer android debug
+      - name: Build APK
+        run: |
+          buildozer android debug
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: apk
-        path: bin/*.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: bin/*.apk
