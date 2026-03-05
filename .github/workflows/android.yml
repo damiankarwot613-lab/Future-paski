@@ -3,11 +3,10 @@ name: Build APK
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
 
@@ -18,36 +17,29 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y \
+        python3-pip \
         build-essential \
         git \
         zip \
         unzip \
         openjdk-17-jdk \
-        python3 \
-        python3-pip \
         autoconf \
-        automake \
         libtool \
         pkg-config \
-        gettext \
-        autopoint \
-        libltdl-dev \
         zlib1g-dev \
-        libncurses5 \
         libncurses5-dev \
-        libtinfo5 \
-        cmake \
-        ninja-build
+        libncursesw5-dev \
+        cmake
 
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip install cython buildozer
+        pip install buildozer cython
 
-        - name: Prepare Android
-          run: |
-             mkdir -p ~/.android
-             touch ~/.android/repositories.cfg
+    - name: Prepare Android config
+      run: |
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
 
     - name: Accept Android licenses
       run: |
@@ -55,10 +47,11 @@ jobs:
 
     - name: Build APK
       run: |
-        buildozer android debug
+        python3 -m buildozer android clean
+        python3 -m buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: future-paski-apk
+        name: apk
         path: bin/*.apk
