@@ -1,6 +1,8 @@
-name: Build APK
+name: Build Android APK
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -8,15 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
+    - name: Install system packages
+      run: |
+        sudo apt update
+        sudo apt install -y \
           python3-pip \
-          python3-setuptools \
           git \
           zip \
           unzip \
@@ -24,28 +25,43 @@ jobs:
           autoconf \
           libtool \
           pkg-config \
-          zlib1g-de
+          zlib1g-dev \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libtinfo5 \
+          cmake \
+          libffi-dev \
+          libssl-dev
 
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython
+    - name: Install Python tools
+      run: |
+        pip install --upgrade pip
+        pip install buildozer cython
 
-      - name: Prepare Android config
-        run: |
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
+    - name: Install Android SDK
+      run: |
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
 
-      - name: Accept Android licenses
-        run: |
-          yes | sdkmanager --licenses || true
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O sdk.zip
+        unzip sdk.zip
+        mv cmdline-tools latest
 
-      - name: Build APK
-        run: |
-          buildozer -v android debug
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk
-          path: bin/*.apk
+    - name: Accept Android licenses
+      run: |
+        yes | sdkmanager --licenses
+
+    - name: Build APK
+      run: |
+        buildozer android clean
+        buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: apk
+        path: bin/*.apk
